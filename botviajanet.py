@@ -63,3 +63,30 @@ daysDifference = flights
 
 #with open('items-json.json', 'w') as arquivo_json:
     #json.dump(type(priceData), arquivo_json)
+
+
+# from datetime import datetime, timedelta
+
+# minDateToTravel = datetime(2024, 4, 3)
+# maxDateToTravel = datetime(2024, 5, 10)
+# minDaysToTravel = 25
+# maxDaysToTravel = 34
+
+# differenceOfDays = maxDateToTravel - minDateToTravel
+
+# def gerar_lista_datas(data_inicial, data_final):
+#     lista_datas = []
+#     data_atual = data_inicial
+
+#     while data_atual <= data_final:
+#         lista_datas.append(data_atual)
+#         data_atual += timedelta(days=1)
+
+#     return lista_datas
+
+# travelDates = gerar_lista_datas(minDateToTravel, maxDateToTravel)
+
+# for date in travelDates:
+#     for datemax in travelDates:
+#         if (datemax - date).days >= minDaysToTravel and (datemax - date).days <= maxDaysToTravel:
+#             print(f"Do dia: {date.day}/{date.month} ao dia {datemax.day}/{datemax.month} tem {(datemax - date).days} dias. Você pode viajar")
