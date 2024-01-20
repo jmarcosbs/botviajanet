@@ -3,10 +3,14 @@ import requests
 from playwright.sync_api import sync_playwright 
 import json 
 from datetime import datetime, timedelta
+import concurrent.futures
+import time
 
 
+print(f"Iniciando busca... [{time.strftime('%X')}]")
 
 ############ Setting variables
+timeStart = time.time()
 countriesToArrive = ["BCN", "MAD", "LIS", "OPO"]
 minDateToTravel = datetime(2024, 4, 3)
 maxDateToTravel = datetime(2024, 5, 10)
@@ -57,6 +61,17 @@ def getPossiblesDeparturesAndArrives(dates, minDays, maxDays):
 
     ###############################################
 
+# === Getting percent from search ===
+def percentFromSearch():
+    totalTimeSearch = 0
+    possibleDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
+    for date in possibleDates:
+        date = date['departure']
+        totalTimeSearch += 1
+
+    return totalTimeSearch
+        
+    
 
 
 
@@ -71,11 +86,13 @@ def getPriceData(viajanetUrl):
                     global apiData
                     apiData = response.json()
                     apiJson = json.dumps(apiData)
-        
-            browser = p.chromium.launch() 
+            
+            browser = p.chromium.launch()
             page = browser.new_page() 
+            page.set_default_timeout(60000)
             page.on("response", handle_response) 
-            page.goto(viajanetUrl, wait_until="networkidle") 
+            page.goto(viajanetUrl, wait_until="networkidle")
+            time.sleep(2)
             page.context.close() 
             browser.close()
     except Exception as e:
@@ -121,23 +138,32 @@ def returnTheLowestPrice(data):
 
 ########### Making the code run ####################
 
-for country in countriesToArrive:
 
+def process_country(country):
     possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
-
     for departureAndArrive in possiblesDates:
-
+        
         departure = departureAndArrive['departure']
         arrive = departureAndArrive['arrive']
         days = departureAndArrive['totalTravelDays']
+        viajanetUrl = f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0"
 
-        priceData = getPriceData(f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0")
+        if getPriceData(viajanetUrl) is not None:
+            priceData = getPriceData(viajanetUrl)
 
-        lowestValue = returnTheLowestPrice(priceData)
+            lowestValue = returnTheLowestPrice(priceData)
 
-        print(f"Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestValue}")
+            print(f"Chegada: {country}- Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestValue} - link: {viajanetUrl}")
+
         
-        
+
+with concurrent.futures.ProcessPoolExecutor() as executor:
+    results_per_country = executor.map(process_country, countriesToArrive)
+
+
+timeStop = time.time()
+
+print(f"Tempo de duração da pesquisa: {timeStop - timeStart}")
 
 #####################################################
     
