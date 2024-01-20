@@ -92,7 +92,7 @@ def getPriceData(viajanetUrl):
             page.set_default_timeout(60000)
             page.on("response", handle_response) 
             page.goto(viajanetUrl, wait_until="networkidle")
-            time.sleep(2)
+            page.wait_for_timeout(10)
             page.context.close() 
             browser.close()
     except Exception as e:
