@@ -24,7 +24,7 @@ minDateToTravel = datetime(2024, 4, 3)
 maxDateToTravel = datetime(2024, 5, 10)
 minDaysToTravel = 25
 maxDaysToTravel = 34
-minPriceToLook = 6000
+minPriceToLook = 4200
 url = "https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/BCN/2024-03-07/2024-03-13/1/0/0?di=1-0"
 #api = "Get the search? value in the future"
 ####################################################
