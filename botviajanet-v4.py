@@ -136,12 +136,11 @@ def returnTheLowestPrice(data):
 
 
 ########### Making the code run ####################
-
+searchProgress = 0
 
 def process_country(country):
     possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
     numberOfPossibilities = len(possiblesDates)
-    searchProgress = 0
     
     for departureAndArrive in possiblesDates:
         searchProgress += 1
