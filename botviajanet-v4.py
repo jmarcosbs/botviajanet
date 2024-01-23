@@ -95,7 +95,7 @@ def getPriceData(viajanetUrl):
             page.context.close() 
             browser.close()
     except Exception as e:
-        print('Tempo de resposta excedido!')
+        print(f'Erro: {e}')
 
     return apiData
 
@@ -140,6 +140,7 @@ def returnTheLowestPrice(data):
 
 def process_country(country):
     possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
+    numberOfPossibilities = len(possiblesDates)
     for departureAndArrive in possiblesDates:
         
         departure = departureAndArrive['departure']
@@ -152,7 +153,7 @@ def process_country(country):
 
             lowestPrice = returnTheLowestPrice(priceData)
 
-            print(f"Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestPrice} - link: {viajanetUrl}")
+            print(f"{numberOfPossibilities} - Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestPrice} - link: {viajanetUrl}")
 
             if lowestPrice <= minPriceToLook:
 
