@@ -32,28 +32,29 @@ url = "https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/BCN/2024-0
 apiData = None
 apiJson = None
 
-try:
-        with sync_playwright() as p:
-            def handle_response(response):
-                # the endpoint we are insterested in
-                if ("search?" in response.url):
-                    global apiJson
-                    global apiData
-                    apiData = response.json()
-                    apiJson = json.dumps(apiData)
+with concurrent.futures.ProcessPoolExecutor() as executor:
+    try:
+            with sync_playwright() as p:
+                def handle_response(response):
+                    # the endpoint we are insterested in
+                    if ("search?" in response.url):
+                        global apiJson
+                        global apiData
+                        apiData = response.json()
+                        apiJson = json.dumps(apiData)
 
-            browser = p.chromium.launch()
-            page = browser.new_page()
-            page.set_default_timeout(60000)
-            page.on("response", handle_response)
-            page.goto(url, wait_until="networkidle")
-            page.wait_for_timeout(10)
-            page.context.close()
-            browser.close()
-except Exception as e:
-        print(f'Erro: {e}')
+                browser = p.chromium.launch()
+                page = browser.new_page()
+                page.set_default_timeout(60000)
+                page.on("response", handle_response)
+                page.goto(url, wait_until="networkidle")
+                page.wait_for_timeout(10)
+                page.context.close()
+                browser.close()
+    except Exception as e:
+            print(f'Erro: {e}')
 
-print(apiData['items'][0]['item']['priceDetail']['adultTotal'])
+    print(apiData['items'][0]['item']['priceDetail']['adultTotal'])
 
 ######################
 
