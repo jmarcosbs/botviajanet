@@ -53,7 +53,7 @@ try:
 except Exception as e:
         print(f'Erro: {e}')
 
-print(apiData)
+print(apiData['items'][0]['item']['priceDetail']['adultTotal'])
 
 ######################
 
