@@ -11,11 +11,11 @@ from google.cloud import logging
 
 print(f"Iniciando busca... [{time.strftime('%X')}]")
 
-# # Google Cloud
-# project_id = 'dulcet-glyph-411603'
-# client = logging.Client(project=project_id)
-# logger = client.logger('my-log')
-# # ======
+# Google Cloud
+project_id = 'dulcet-glyph-411603'
+client = logging.Client(project=project_id)
+logger = client.logger('my-log')
+# ======
 
 ############ Setting variables
 timeStart = time.time()
@@ -69,19 +69,10 @@ def getPossiblesDeparturesAndArrives(dates, minDays, maxDays):
 
     ###############################################
 
-# === Getting percent from search ===
-def percentFromSearch():
-    totalTimeSearch = 0
-    possibleDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
-    for date in possibleDates:
-        date = date['departure']
-        totalTimeSearch += 1
-
-    return totalTimeSearch
-        
     
 
-
+apiData = None
+apiJson = None
 
 ############ Getting price data
 def getPriceData(viajanetUrl):
@@ -186,7 +177,7 @@ with concurrent.futures.ProcessPoolExecutor(max_workers=numCores) as executor:
 
 timeStop = time.time()
 
-# logger.log_text(f'Buscar Finalizada. Tempo de duração: {timeStop - timeStart}')
+logger.log_text(f'Buscar Finalizada. Tempo de duração: {timeStop - timeStart}')
 
 print(f"Tempo de duração da pesquisa: {timeStop - timeStart}")
 
