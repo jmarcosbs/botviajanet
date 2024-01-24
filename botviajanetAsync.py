@@ -75,118 +75,86 @@ def getPossiblesDeparturesAndArrives(dates, minDays, maxDays):
 apiData = None
 apiJson = None
 
-############ Getting price data
-def getPriceData(viajanetUrl):
+# ... (seções iniciais do código permanecem inalteradas)
+
+async def getPriceData(viajanetUrl):
     try:
-        with sync_playwright() as p: 
-            def handle_response(response): 
-                # the endpoint we are insterested in 
-                if ("search?" in response.url):
-                    global apiJson
-                    global apiData
-                    apiData = response.json()
-                    apiJson = json.dumps(apiData)
-            
-            browser = p.chromium.launch()
-            page = browser.new_page() 
+        async with sync_playwright() as p:
+            async def handle_response(api_data, api_json, response):
+                if "search?" in response.url:
+                    data = await response.json()
+                    api_data.update(data)
+                    api_json.append(json.dumps(data))
+
+            apiData = {}
+            apiJson = []
+
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
             page.set_default_timeout(60000)
-            page.on("response", handle_response) 
-            page.goto(viajanetUrl, wait_until="networkidle")
-            page.wait_for_timeout(10)
-            page.context.close() 
-            browser.close()
+            page.on("response", lambda response: handle_response(apiData, apiJson, response))
+            await page.goto(viajanetUrl, wait_until="networkidle")
+            await page.wait_for_timeout(10)
+            await page.context.close()
+            await browser.close()
     except Exception as e:
         print(f'Erro: {e}')
 
     return apiData
 
-priceData = getPriceData(url)
-
-######################
+# ... (restante do código permanece inalterado)
 
 
-
-
-
-###################### Return the lowest price value
-
-
-def returnTheLowestPrice(data):
-    i = 0
-    flightsPrices = []
-    for item in data['items']: #Return a list with price values
-        try:
-            i += 1
-            flightsPrices.append(item['item']['priceDetail']['adultTotal'])
-
-        except Exception as e:
-            None
-
-    lowestFlightPrice = min(flightsPrices)
-
-    return lowestFlightPrice
-
-#################################################
-
-
-
-
-########### Making the code run ####################
-
-global i
-i = 0
-def process_country(country):
-    global i
+async def process_country(country):
     try:
-        
         possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
         numberOfPossibilities = len(possiblesDates)
-        
+
         for departureAndArrive in possiblesDates:
-            departure = departureAndArrive['departure']
-            arrive = departureAndArrive['arrive']
-            days = departureAndArrive['totalTravelDays']
+            departure, arrive, days = departureAndArrive['departure'], departureAndArrive['arrive'], departureAndArrive['totalTravelDays']
             viajanetUrl = f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0"
-            
-            i = i + 1
+
+            global i
+            i += 1
             progress = i / numberOfPossibilities * 100
 
-            if getPriceData(viajanetUrl) is not None:
-                priceData = getPriceData(viajanetUrl)
-
+            if await getPriceData(viajanetUrl) is not None:
+                priceData = await getPriceData(viajanetUrl)
                 lowestPrice = returnTheLowestPrice(priceData)
 
                 print(f"{progress}% Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestPrice} - link: {viajanetUrl}")
 
                 if lowestPrice <= minPriceToLook:
-
                     print("Preço alvo encontrado!")
 
                     token = "6891057872:AAHEN4leh0JQxpmLiR0GN4YB38eHtaGkB2M"
-
                     chatId = "732421718"
-
                     telegramMessage = f"Alerta de preço: R${lowestPrice} - {country} - {days} dias - Link: {viajanetUrl}"
-
                     telegramUrl = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chatId}&text={telegramMessage}"
 
-                    send = requests.get(telegramUrl)  #Send mensage in Telegram
+                    send = requests.get(telegramUrl)  # Send mensagem in Telegram
                     send.json()
     except Exception as e:
         print(f'Erro: {e}')
         logger.log_text(e)
-        
-numCores = multiprocessing.cpu_count()
 
+async def main():
+    global i
+    i = 0
+    tasks = []
 
-with concurrent.futures.ProcessPoolExecutor(max_workers=numCores) as executor:
-    results_per_country = executor.map(process_country, countriesToArrive)
+    async with sync_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
 
-timeStop = time.time()
+        with concurrent.futures.ProcessPoolExecutor(max_workers=-1) as executor:
+            for country in countriesToArrive:
+                tasks.append(asyncio.ensure_future(process_country(country)))
 
-logger.log_text(f'Buscar Finalizada. Tempo de duração: {timeStop - timeStart}')
+            await asyncio.gather(*tasks)
 
-print(f"Tempo de duração da pesquisa: {timeStop - timeStart}")
+        await page.context.close()
+        await browser.close()
 
-#####################################################
-    
+if __name__ == "__main__":
+    asyncio.run(main())

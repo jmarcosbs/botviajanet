@@ -1,36 +1,22 @@
-from bs4 import BeautifulSoup
 import requests
-from playwright.sync_api import sync_playwright 
 import json 
 from datetime import datetime, timedelta
-import concurrent.futures
 import time
-import multiprocessing
-from google.cloud import logging
-import asyncio
+import asyncio                            
+from playwright.sync_api import sync_playwright
 
 
-print(f"Iniciando busca... [{time.strftime('%X')}]")
+print(f"Iniciando busca...")
 
-# Google Cloud
-project_id = 'dulcet-glyph-411603'
-client = logging.Client(project=project_id)
-logger = client.logger('my-log')
-# ======
 
 ############ Setting variables
-timeStart = time.time()
 countriesToArrive = ["BCN", "MAD", "LIS", "OPO"]
 minDateToTravel = datetime(2024, 4, 3)
 maxDateToTravel = datetime(2024, 5, 10)
 minDaysToTravel = 25
 maxDaysToTravel = 34
-minPriceToLook = 4200
 url = "https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/BCN/2024-03-07/2024-03-13/1/0/0?di=1-0"
-#api = "Get the search? value in the future"
 ####################################################
-
-
 
 
 
@@ -76,29 +62,34 @@ apiData = None
 apiJson = None
 
 ############ Getting price data
-def getPriceData(viajanetUrl):
+import json
+from playwright.sync_api import sync_playwright
+
+async def getPriceData(viajanetUrl):
     try:
-        with sync_playwright() as p: 
-            def handle_response(response): 
-                # the endpoint we are insterested in 
-                if ("search?" in response.url):
-                    global apiJson
-                    global apiData
-                    apiData = response.json()
-                    apiJson = json.dumps(apiData)
-            
-            browser = p.chromium.launch()
-            page = browser.new_page() 
+        async with sync_playwright() as p:
+            async def handle_response(response, api_data, api_json):
+                if "search?" in response.url:
+                    data = await response.json()
+                    api_data.update(data)
+                    api_json.append(json.dumps(data))
+
+            apiData = {}
+            apiJson = []
+
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
             page.set_default_timeout(60000)
-            page.on("response", handle_response) 
-            page.goto(viajanetUrl, wait_until="networkidle")
-            page.wait_for_timeout(10)
-            page.context.close() 
-            browser.close()
+            page.on("response", lambda response: handle_response(response, apiData, apiJson))
+            await page.goto(viajanetUrl, wait_until="networkidle")
+            await page.wait_for_timeout(10)
+            await page.context.close()
+            await browser.close()
     except Exception as e:
         print(f'Erro: {e}')
 
     return apiData
+
 
 priceData = getPriceData(url)
 
@@ -135,8 +126,7 @@ def returnTheLowestPrice(data):
 
 global i
 i = 0
-def process_country(country):
-    global i
+for country in countriesToArrive:
     try:
         
         possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
@@ -175,13 +165,8 @@ def process_country(country):
     except Exception as e:
         print(f'Erro: {e}')
         logger.log_text(e)
-        
-numCores = multiprocessing.cpu_count()
 
-
-with concurrent.futures.ProcessPoolExecutor(max_workers=numCores) as executor:
-    results_per_country = executor.map(process_country, countriesToArrive)
-
+    
 timeStop = time.time()
 
 logger.log_text(f'Buscar Finalizada. Tempo de duração: {timeStop - timeStart}')
