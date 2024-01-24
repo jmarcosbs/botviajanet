@@ -129,25 +129,14 @@ def returnTheLowestPrice(data):
 
 
 
-i = 0
-def countone():
-    i += 1
-    
-for i in range(5):
-    countone()
-    print(i)
-    
-
-
-
 
 ########### Making the code run ####################
 
-
-
+global i
+i = 0
 def process_country(country):
     try:
-        i = 0
+        
         possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
         numberOfPossibilities = len(possiblesDates)
         
@@ -156,7 +145,7 @@ def process_country(country):
             arrive = departureAndArrive['arrive']
             days = departureAndArrive['totalTravelDays']
             viajanetUrl = f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0"
-
+            global i
             i = i + 1
             progress = i / numberOfPossibilities * 100
 
