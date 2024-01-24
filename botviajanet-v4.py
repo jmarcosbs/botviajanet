@@ -136,14 +136,12 @@ def returnTheLowestPrice(data):
 
 
 ########### Making the code run ####################
-searchProgress = 0
 
 def process_country(country):
     possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
     numberOfPossibilities = len(possiblesDates)
     
     for departureAndArrive in possiblesDates:
-        searchProgress += 1
         departure = departureAndArrive['departure']
         arrive = departureAndArrive['arrive']
         days = departureAndArrive['totalTravelDays']
@@ -154,7 +152,7 @@ def process_country(country):
 
             lowestPrice = returnTheLowestPrice(priceData)
 
-            print(f"{(searchProgress / numberOfPossibilities) * 100}% - Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestPrice} - link: {viajanetUrl}")
+            print(f" Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestPrice} - link: {viajanetUrl}")
 
             if lowestPrice <= minPriceToLook:
 
