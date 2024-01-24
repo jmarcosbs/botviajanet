@@ -129,8 +129,14 @@ def returnTheLowestPrice(data):
 
 
 
-
-
+i = 0
+def countone():
+    i += 1
+    
+for i in range(5):
+    countone()
+    print(i)
+    
 
 
 
