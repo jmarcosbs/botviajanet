@@ -135,6 +135,7 @@ def returnTheLowestPrice(data):
 global i
 i = 0
 def process_country(country):
+    global i
     try:
         
         possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
@@ -145,7 +146,7 @@ def process_country(country):
             arrive = departureAndArrive['arrive']
             days = departureAndArrive['totalTravelDays']
             viajanetUrl = f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0"
-            global i
+            
             i = i + 1
             progress = i / numberOfPossibilities * 100
 
