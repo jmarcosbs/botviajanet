@@ -116,7 +116,7 @@ def returnTheLowestPrice(data):
     for item in data['items']: #Return a list with price values
         try:
             i += 1
-            flightsPrices.append(item['item']['priceDetail']['mainFare']['amount'])
+            flightsPrices.append(item['item']['priceDetail']['adultTotal'])
 
         except Exception as e:
             None
@@ -137,40 +137,50 @@ def returnTheLowestPrice(data):
 
 ########### Making the code run ####################
 
+
+
 def process_country(country):
-    possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
-    numberOfPossibilities = len(possiblesDates)
-    
-    for departureAndArrive in possiblesDates:
-        departure = departureAndArrive['departure']
-        arrive = departureAndArrive['arrive']
-        days = departureAndArrive['totalTravelDays']
-        viajanetUrl = f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0"
+    try:
+        i = 0
+        possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
+        numberOfPossibilities = len(possiblesDates)
+        
+        for departureAndArrive in possiblesDates:
+            departure = departureAndArrive['departure']
+            arrive = departureAndArrive['arrive']
+            days = departureAndArrive['totalTravelDays']
+            viajanetUrl = f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0"
 
-        if getPriceData(viajanetUrl) is not None:
-            priceData = getPriceData(viajanetUrl)
+            i = i + 1
+            progress = i / numberOfPossibilities * 100
 
-            lowestPrice = returnTheLowestPrice(priceData)
+            if getPriceData(viajanetUrl) is not None:
+                priceData = getPriceData(viajanetUrl)
 
-            print(f" Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestPrice} - link: {viajanetUrl}")
+                lowestPrice = returnTheLowestPrice(priceData)
 
-            if lowestPrice <= minPriceToLook:
+                print(f"{progress}% Chegada: {country} - Ida: {departure} - Volta: {arrive} - Dias: {days} - Valor mais baixo: {lowestPrice} - link: {viajanetUrl}")
 
-                print("Preço alvo encontrado!")
+                if lowestPrice <= minPriceToLook:
 
-                token = "6891057872:AAHEN4leh0JQxpmLiR0GN4YB38eHtaGkB2M"
+                    print("Preço alvo encontrado!")
 
-                chatId = "732421718"
+                    token = "6891057872:AAHEN4leh0JQxpmLiR0GN4YB38eHtaGkB2M"
 
-                telegramMessage = f"Alerta de preço: R${lowestPrice} - {country} - {days} dias - Link: {viajanetUrl}"
+                    chatId = "732421718"
 
-                telegramUrl = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chatId}&text={telegramMessage}"
+                    telegramMessage = f"Alerta de preço: R${lowestPrice} - {country} - {days} dias - Link: {viajanetUrl}"
 
-                send = requests.get(telegramUrl)  #Send mensage in Telegram
-                send.json()
+                    telegramUrl = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chatId}&text={telegramMessage}"
 
+                    send = requests.get(telegramUrl)  #Send mensage in Telegram
+                    send.json()
+    except Exception as e:
+        print(f'Erro: {e}')
+        logger.log_text(e)
         
 numCores = multiprocessing.cpu_count()
+
 
 with concurrent.futures.ProcessPoolExecutor(max_workers=numCores) as executor:
     results_per_country = executor.map(process_country, countriesToArrive)
