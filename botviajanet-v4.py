@@ -136,6 +136,9 @@ global i
 i = 0
 def process_country(country):
     global i
+    i = i + 1
+    progress = i / numberOfPossibilities * 100
+    
     try:
         
         possiblesDates = getPossiblesDeparturesAndArrives(travelDates, minDaysToTravel, maxDaysToTravel)
@@ -147,8 +150,7 @@ def process_country(country):
             days = departureAndArrive['totalTravelDays']
             viajanetUrl = f"https://www.viajanet.com.br/shop/flights/results/roundtrip/FLN/{country}/{departure}/{arrive}/1/0/0?di=1-0"
             
-            i = i + 1
-            progress = i / numberOfPossibilities * 100
+            
 
             if getPriceData(viajanetUrl) is not None:
                 priceData = getPriceData(viajanetUrl)
